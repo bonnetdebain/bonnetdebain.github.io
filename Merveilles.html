@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chasse au Trésor - Les Merveilles du Monde</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #map {
+            flex: 1;
+        }
+        #info {
+            position: absolute;
+            top: 100px;
+            left: 100px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #header {
+            background-color: #4589;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+        #header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        #header p {
+            margin: 0;
+            font-size: 14px;
+        }
+        #icons {
+            position: absolute;
+            top: 200px;
+            left: 100px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .icon {
+            background-color: #2A2A2A;
+            color: #fff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+        }
+        #popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 2px solid #333;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            text-align: center;
+        }
+        #popup h2 {
+            margin: 0 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Chasse au Trésor Virtuelle</h1>
+        <p>Date : <span id="date"></span></p>
+    </div>
+    <div id="info">Indice 1 : Une structure visible depuis l'espace.</div>
+    <div id="icons"></div>
+    <div id="map"></div>
+    <div id="popup">
+        <h2>Gagné !</h2>
+        <p>Temps écoulé : <span id="elapsed-time"></span></p>
+    </div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Afficher la date actuelle
+        document.getElementById('date').innerText = new Date().toLocaleDateString();
+
+        var startTime = new Date(); // Enregistrer l'heure de début
+
+        var map = L.map('map').setView([20.5937, 78.9629], 2); // Coordonnées initiales et niveau de zoom
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var markers = [
+            { coords: [40.4319, 116.5704], text: "Grande Muraille de Chine - Indice 2 : Une cité rose sculptée dans la roche.", number: 1 },
+            { coords: [30.3285, 35.4444], text: "Petra - Indice 3 : Une ancienne cité inca perchée dans les montagnes.", number: 2 },
+            { coords: [-13.1631, -72.5450], text: "Machu Picchu - Indice 4 : Un amphithéâtre emblématique de Rome.", number: 3 },
+            { coords: [41.8902, 12.4922], text: "Colisée - Indice 5 : Un mausolée en marbre blanc en Inde.", number: 4 },
+            { coords: [27.1751, 78.0421], text: "Taj Mahal - Bravo, vous avez terminé la chasse au trésor !", number: 5 }
+        ];
+
+        var infoDiv = document.getElementById('info');
+        var iconsDiv = document.getElementById('icons');
+        var popup = document.getElementById('popup');
+        var elapsedTimeSpan = document.getElementById('elapsed-time');
+
+        markers.forEach(function(markerInfo, index) {
+            var icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: '<div style="background-color:#2A2A2A;color:#fff;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px;">' + markerInfo.number + '</div>',
+                iconSize: [15, 15],
+                iconAnchor: [15, 15]
+            });
+
+            var marker = L.marker(markerInfo.coords, { icon: icon });
+            marker.bindPopup(markerInfo.text);
+
+            marker.on('click', function() {
+                infoDiv.innerHTML = markerInfo.text;
+
+                // Ajouter une icône avec le numéro du marqueur dans le conteneur
+                var newIcon = document.createElement('div');
+                newIcon.className = 'icon';
+                newIcon.innerText = markerInfo.number;
+                iconsDiv.appendChild(newIcon);
+
+                // Afficher le pop-up de victoire si c'est le dernier repère
+                if (index === markers.length - 1) {
+                    var endTime = new Date();
+                    var elapsedTime = Math.floor((endTime - startTime) / 1000); // Temps écoulé en secondes
+                    elapsedTimeSpan.innerText = elapsedTime + " secondes";
+                    popup.style.display = 'block';
+                }
+            });
+
+            map.on('zoomend', function() {
+                if (map.getZoom() >= 12) { // Niveau de zoom à partir duquel les repères apparaissent
+                    if (!map.hasLayer(marker)) {
+                        map.addLayer(marker);
+                    }
+                } else {
+                    if (map.hasLayer(marker)) {
+                        map.removeLayer(marker);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

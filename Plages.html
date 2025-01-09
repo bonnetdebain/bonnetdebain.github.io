@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chasse au Trésor - Les Plages Paradisiaques</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #map {
+            flex: 1;
+        }
+        #info {
+            position: absolute;
+            top: 100px;
+            left: 100px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #header {
+            background-color: #4589;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+        #header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        #header p {
+            margin: 0;
+            font-size: 14px;
+        }
+        #icons {
+            position: absolute;
+            top: 200px;
+            left: 100px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .icon {
+            background-color: #2A2A2A;
+            color: #fff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+        }
+        #popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 2px solid #333;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            text-align: center;
+        }
+        #popup h2 {
+            margin: 0 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Chasse au Trésor Virtuelle</h1>
+        <p>Date : <span id="date"></span></p>
+    </div>
+    <div id="info">Indice 1 : Une île polynésienne avec des bungalows sur l'eau.</div>
+    <div id="icons"></div>
+    <div id="map"></div>
+    <div id="popup">
+        <h2>Gagné !</h2>
+        <p>Temps écoulé : <span id="elapsed-time"></span></p>
+    </div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Afficher la date actuelle
+        document.getElementById('date').innerText = new Date().toLocaleDateString();
+
+        var startTime = new Date(); // Enregistrer l'heure de début
+
+        var map = L.map('map').setView([-17.6797, -149.4068], 2); // Coordonnées initiales et niveau de zoom
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var markers = [
+            { coords: [-16.5004, -151.7415], text: "Bora Bora - Indice 2 : Un archipel de l'océan Indien avec des plages de sable blanc.", number: 1 },
+            { coords: [3.2028, 73.2207], text: "Maldives - Indice 3 : Des îles granitiques avec des plages de sable rose.", number: 2 },
+            { coords: [-4.6796, 55.4920], text: "Seychelles - Indice 4 : Une île hawaïenne avec des plages de surf.", number: 3 },
+            { coords: [20.7984, -156.3319], text: "Maui - Indice 5 : Une île grecque avec des maisons blanches et des plages volcaniques.", number: 4 },
+            { coords: [36.3932, 25.4615], text: "Santorin - Bravo, vous avez terminé la chasse au trésor !", number: 5 }
+        ];
+
+        var infoDiv = document.getElementById('info');
+        var iconsDiv = document.getElementById('icons');
+        var popup = document.getElementById('popup');
+        var elapsedTimeSpan = document.getElementById('elapsed-time');
+
+        markers.forEach(function(markerInfo, index) {
+            var icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: '<div style="background-color:#2A2A2A;color:#fff;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px;">' + markerInfo.number + '</div>',
+                iconSize: [15, 15],
+                iconAnchor: [15, 15]
+            });
+
+            var marker = L.marker(markerInfo.coords, { icon: icon });
+            marker.bindPopup(markerInfo.text);
+
+            marker.on('click', function() {
+                infoDiv.innerHTML = markerInfo.text;
+
+                // Ajouter une icône avec le numéro du marqueur dans le conteneur
+                var newIcon = document.createElement('div');
+                newIcon.className = 'icon';
+                newIcon.innerText = markerInfo.number;
+                iconsDiv.appendChild(newIcon);
+
+                // Afficher le pop-up de victoire si c'est le dernier repère
+                if (index === markers.length - 1) {
+                    var endTime = new Date();
+                    var elapsedTime = Math.floor((endTime - startTime) / 1000); // Temps écoulé en secondes
+                    elapsedTimeSpan.innerText = elapsedTime + " secondes";
+                    popup.style.display = 'block';
+                }
+            });
+
+            map.on('zoomend', function() {
+                if (map.getZoom() >= 12) { // Niveau de zoom à partir duquel les repères apparaissent
+                    if (!map.hasLayer(marker)) {
+                        map.addLayer(marker);
+                    }
+                } else {
+                    if (map.hasLayer(marker)) {
+                        map.removeLayer(marker);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
