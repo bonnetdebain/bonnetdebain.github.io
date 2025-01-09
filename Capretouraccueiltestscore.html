@@ -100,6 +100,9 @@
     <div id="popup">
         <h2>Gagné !</h2>
         <p>Temps écoulé : <span id="elapsed-time"></span></p>
+        <p>Nombre de niveaux de zoom : <span id="zoom-count"></span></p>
+        <p>Score : <span id="score"></span>/500</p>
+        <p id="message"></p>
     </div>
     <button id="home-button">Page d'accueil</button>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -109,6 +112,7 @@
         document.getElementById('date').innerText = new Date().toLocaleDateString();
 
         var startTime = new Date(); // Enregistrer l'heure de début
+        var zoomCount = 0; // Initialiser le compteur de niveaux de zoom
 
         var map = L.map('map').setView([54.5260, 15.2551], 4); // Coordonnées initiales et niveau de zoom
 
@@ -128,6 +132,9 @@
         var iconsDiv = document.getElementById('icons');
         var popup = document.getElementById('popup');
         var elapsedTimeSpan = document.getElementById('elapsed-time');
+        var zoomCountSpan = document.getElementById('zoom-count');
+        var scoreSpan = document.getElementById('score');
+        var messageSpan = document.getElementById('message');
 
         markers.forEach(function(markerInfo, index) {
             var icon = L.divIcon({
@@ -155,6 +162,23 @@
                     var endTime = new Date();
                     var elapsedTime = Math.floor((endTime - startTime) / 1000); // Temps écoulé en secondes
                     elapsedTimeSpan.innerText = elapsedTime + " secondes";
+                    zoomCountSpan.innerText = zoomCount; // Afficher le nombre de niveaux de zoom
+
+                    // Calculer le score
+                    var score = 500;
+                    if (zoomCount > 12) {
+                        score -= (zoomCount - 12);
+                    }
+                    if (elapsedTime > 30) {
+                        score -= (elapsedTime - 30);
+                    }
+                    scoreSpan.innerText = score;
+
+                    // Afficher un message si le score n'est pas parfait
+                    if (score < 500) {
+                        messageSpan.innerText = "Accélère ou arrête de dézoomer";
+                    }
+
                     popup.style.display = 'block';
 
                     // Déclencher les feux d'artifice
@@ -173,6 +197,15 @@
                             left: 50,
                             right: container.clientWidth
                         },
+                        sound: {
+                            enable: true,
+                            files: [
+                                'https://cdn.jsdelivr.net/npm/fireworks-js/dist/sounds/explosion0.mp3',
+                                'https://cdn.jsdelivr.net/npm/fireworks-js/dist/sounds/explosion1.mp3',
+                                'https://cdn.jsdelivr.net/npm/fireworks-js/dist/sounds/explosion2.mp3'
+                            ],
+                            volume: { min: 4, max: 8 }
+                        }
                     });
                     fireworks.start();
                     setTimeout(() => {
@@ -183,11 +216,12 @@
                             var marker = L.marker(markerInfo.coords, { icon: icon });
                             map.addLayer(marker);
                         });
-                    }, 5000); // Arrêter les feux d'artifice après 5 secondes
+                    }, 15000); // Arrêter les feux d'artifice après 15 secondes
                 }
             });
 
             map.on('zoomend', function() {
+                zoomCount++; // Incrémenter le compteur de niveaux de zoom
                 if (map.getZoom() >= 12) { // Niveau de zoom à partir duquel les repères apparaissent
                     if (!map.hasLayer(marker)) {
                         map.addLayer(marker);
